@@ -14,12 +14,13 @@ macro bind(def, element)
 end
 
 # ╔═╡ 94c8991c-1455-11eb-3bb5-057745fc8e54
-using Plots, Distributions
+using DataFrames, Plots, Distributions
 
 # ╔═╡ 8eae5e92-1456-11eb-3479-0da86a710339
 begin
 	include("weather.jl")
 	include("quality.jl")
+	include("experimental_data.jl")
 end
 
 # ╔═╡ 2d2ad394-146c-11eb-2abb-fd705dfb96af
@@ -60,6 +61,24 @@ md"""
 plot(temperatures, quality.(temperatures, t_optimal = t_optimal), 
 	label=nothing, xlabel = "temperature", ylabel = "quality")
 
+# ╔═╡ 5d525094-146f-11eb-376f-5576a6a074c9
+md"""
+## Experimental data
+"""
+
+# ╔═╡ b79ccb92-146f-11eb-3a25-d714369df5ca
+intensifier_data = DataFrame(
+	"intensifier" => intensifiers, 
+	"valence" => valence.(intensifiers), 
+	"temperature" => (mean ∘ responses).(intensifiers),
+	"std" => (std ∘ responses).(intensifiers))
+
+# ╔═╡ bfd4f3ae-146f-11eb-36cb-9d8e97cab2ba
+scatter(intensifier_data.valence, intensifier_data.temperature, 
+	#yerror = plot_data.std,
+	#series_annotations = Plots.text.(plot_data.intensifier, :bottom, 8),
+	label = nothing, xlabel = "valence", ylabel = "mean response (°C)")
+
 # ╔═╡ Cell order:
 # ╟─2d2ad394-146c-11eb-2abb-fd705dfb96af
 # ╠═94c8991c-1455-11eb-3bb5-057745fc8e54
@@ -71,3 +90,6 @@ plot(temperatures, quality.(temperatures, t_optimal = t_optimal),
 # ╟─6d19deb6-1456-11eb-0b1d-13fd70f90fb7
 # ╠═cfdc7e1c-1456-11eb-2382-df189721fa46
 # ╠═d51b068c-1456-11eb-0771-15439bbac1cc
+# ╟─5d525094-146f-11eb-376f-5576a6a074c9
+# ╠═b79ccb92-146f-11eb-3a25-d714369df5ca
+# ╠═bfd4f3ae-146f-11eb-36cb-9d8e97cab2ba

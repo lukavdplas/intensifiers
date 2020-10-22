@@ -7,9 +7,6 @@ using InteractiveUtils
 # ╔═╡ 88dcaae6-0d3c-11eb-2ffc-9d5335de20d2
 using DataFrames, CSV, Dates, Distributions
 
-# ╔═╡ 71bbd610-0d3d-11eb-13e8-cde4663c8962
-using Plots
-
 # ╔═╡ ca5034fc-1464-11eb-32f0-4f4d4ad10ea2
 md"""
 We import the data on weather in New York.
@@ -71,7 +68,6 @@ prior_range(lower, upper) = cdf(prior_temp, upper + 1) - cdf(prior_temp, lower)
 
 # ╔═╡ Cell order:
 # ╠═88dcaae6-0d3c-11eb-2ffc-9d5335de20d2
-# ╠═71bbd610-0d3d-11eb-13e8-cde4663c8962
 # ╟─ca5034fc-1464-11eb-32f0-4f4d4ad10ea2
 # ╠═472a916c-0d3c-11eb-0a2b-230360f03207
 # ╠═8af16164-0d3c-11eb-3fdf-53d1f42a2e6f
