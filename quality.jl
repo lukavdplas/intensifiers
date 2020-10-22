@@ -22,17 +22,17 @@ md"""
 
 We want to define a function that determines the quality (i.e. subjective "goodness") of a temperature.
 
-We use a domain of temperatures $D = [-10, 50]$, and define $quality: D \rightarrow R$
+We use a domain of temperatures $T = [-10, 50]$, and define $quality: T \rightarrow \mathbb{R}$
 
 Some desired properties:
 
-There must exist a temperature $T_{opt}$ with $\min(D) < T_{opt} < \max(D)$, such that $quality$ is monotone increasing on $[\min(D) , T_{opt}]$, and monotone decreasing on $[T_{opt}, \max(D)]$. 
+There must exist a temperature $t_{opt}$ with $\min(T) < t_{opt} < \max(T)$, such that $quality$ is monotone increasing on $[\min(T) , t_{opt}]$, and monotone decreasing on $[t_{opt}, \max(T)]$. 
 
-More strictly, $quality(T_{opt}) > quality(\min(D))$, and $quality(T_{opt}) > quality(\max(D))$. (In other words, $quality$ cannot be constant.)
+More strictly, $quality(t_{opt}) > quality(\min(T))$, and $quality(t_{opt}) > quality(\max(T))$. (In other words, $quality$ cannot be constant.)
 
 These two properties ensure the concept of double-sided excess, and the existence of a "goldilocks zone".
 
-Furthermore, the value of $\frac{\delta quality(T)}{\delta T}$ must be defined for all $T$. This is not strictly necessary, but will be convenient for the definition of the wider model.
+Furthermore, the value of $\frac{\delta \, quality(t)}{\delta \, t}$ must be defined for all $t \in T$. This is not strictly necessary, but will be convenient for the definition of the wider model.
 """
 
 # ╔═╡ e21058fa-0e1e-11eb-229d-03148e523f6d
@@ -68,6 +68,38 @@ md"Optimal temperature: $(T_optimal) °C"
 plot(temperatures, quality.(temperatures, T_optimal = T_optimal), 
 	label=nothing, xlabel = "temperature", ylabel = "quality")
 
+# ╔═╡ 7531071c-0fa8-11eb-153a-c1e368d9db42
+md"""
+## One-sided quality functions
+"""
+
+# ╔═╡ acd0c320-0fa7-11eb-151a-5198f3a567ab
+function warmth_quality(T; T_optimal = 25)
+	if T < T_optimal
+		1
+	else
+		quality(T)
+	end
+end
+
+# ╔═╡ e7b85c78-0fa7-11eb-09e8-11ab24ce5f3a
+function cold_quality(T; T_optimal = 25)
+	if T > T_optimal
+		1
+	else
+		quality(T)
+	end
+end
+
+# ╔═╡ d25f02a0-0fa7-11eb-389a-ed231cc697e3
+let
+	p = plot(xlabel = "temperature", ylabel = "quality")
+	plot!(temperatures, warmth_quality.(temperatures, T_optimal = T_optimal),
+		label="warmth", linecolor = :red)
+	plot!(temperatures, cold_quality.(temperatures, T_optimal = T_optimal),
+		label="cold", linecolor = :deepskyblue)
+end
+
 # ╔═╡ Cell order:
 # ╟─285a22da-0e17-11eb-0683-7fb7298050ac
 # ╟─e21058fa-0e1e-11eb-229d-03148e523f6d
@@ -78,3 +110,7 @@ plot(temperatures, quality.(temperatures, T_optimal = T_optimal),
 # ╠═cbe31486-0e1f-11eb-02e0-6b08ca181182
 # ╟─e8eb42d8-0e1f-11eb-0f39-f7f983e01fae
 # ╠═20d8dc7c-0e1c-11eb-178f-8b70e057c1fd
+# ╟─7531071c-0fa8-11eb-153a-c1e368d9db42
+# ╠═acd0c320-0fa7-11eb-151a-5198f3a567ab
+# ╠═e7b85c78-0fa7-11eb-09e8-11ab24ce5f3a
+# ╠═d25f02a0-0fa7-11eb-389a-ed231cc697e3

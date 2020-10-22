@@ -10,6 +10,9 @@ using Distributions
 # ╔═╡ 2d3a1750-0d64-11eb-2444-835bdf4982b2
 using Plots
 
+# ╔═╡ 85916c5c-0f88-11eb-0533-f77d51a11f81
+using DataFrames
+
 # ╔═╡ 1d6b6f7a-0d61-11eb-288b-911cc4f27369
 md"""
 ## Possible worlds and messages
@@ -55,7 +58,7 @@ We define a literal listener, a speaker and a pragmatic listener.
 """
 
 # ╔═╡ d4a54716-0d5b-11eb-0a16-753470a2251a
-function literal_listener(degree, message, θ)
+function literal_listener(degree::Int, message::String, θ)
 	if degree < θ
 		0.0
 	else
@@ -63,9 +66,27 @@ function literal_listener(degree, message, θ)
 	end
 end
 
+# ╔═╡ 7a2ac514-0d5f-11eb-30b0-57e7dde56430
+md"""
+# Testing
+"""
+
+# ╔═╡ b554e202-0d6e-11eb-10b0-f5823d50597f
+ex_θs =  Dict(m => (m == "null" ? first(temperatures) : 20) for m in messages)
+
+# ╔═╡ ef00da32-0d5e-11eb-35f3-55d363c429ad
+λ = 2
+
+# ╔═╡ bb08d83e-0f95-11eb-3978-6b9e0b65ea08
+γ = 1
+
 # ╔═╡ d6582570-0d5d-11eb-28f0-ffb9703ffdc6
 function cost(message)
-	message != "null" ? 2 : 0
+	if message != "null" 
+		γ
+	else
+		0
+	end
 end
 
 # ╔═╡ 83cde2ba-0d5d-11eb-3a96-957db0095676
@@ -74,14 +95,14 @@ function utility(degree, message, θ)
 end
 
 # ╔═╡ 36206f76-0d5e-11eb-1a6f-a9df99c1a543
-function speaker(degree, message, θs, λ)
+function speaker(degree::Int, message::String, θs, λ)
 	u(m) = exp(λ * utility(degree, m, θs[m]))
 	
 	u(message) / sum(u.(messages))
 end
 
 # ╔═╡ 9273de26-0d5f-11eb-00ab-09d6d96b3142
-function listener(degree, message, λ)
+function listener(degree::Int, message::String, λ)
 	not_normalised(d) = let
 		speaker_given_θ(θ) = let
 			θs = Dict(m => (m == "null" ? first(temperatures) : θ) for m in messages)
@@ -99,17 +120,6 @@ function listener_expectation(message, λ)
 	posteriors = map(t -> listener(t, message, λ), temperatures)
 	sum(temperatures .* posteriors) / sum(posteriors)
 end
-
-# ╔═╡ 7a2ac514-0d5f-11eb-30b0-57e7dde56430
-md"""
-# Testing
-"""
-
-# ╔═╡ b554e202-0d6e-11eb-10b0-f5823d50597f
-ex_θs =  Dict(m => (m == "null" ? first(temperatures) : 20) for m in messages)
-
-# ╔═╡ ef00da32-0d5e-11eb-35f3-55d363c429ad
-λ = 2
 
 # ╔═╡ fcafddee-0d6e-11eb-3bd9-3b062c58d013
 let
@@ -186,6 +196,7 @@ Module imports:
 # ╟─7a2ac514-0d5f-11eb-30b0-57e7dde56430
 # ╠═b554e202-0d6e-11eb-10b0-f5823d50597f
 # ╠═ef00da32-0d5e-11eb-35f3-55d363c429ad
+# ╠═bb08d83e-0f95-11eb-3978-6b9e0b65ea08
 # ╠═fcafddee-0d6e-11eb-3bd9-3b062c58d013
 # ╠═c3cf80a2-0d5e-11eb-2baa-39a2c31ae79e
 # ╠═36bde40e-0d6f-11eb-211c-c5650d166c83
@@ -195,3 +206,4 @@ Module imports:
 # ╟─9af6ba26-0e24-11eb-002b-171800077f76
 # ╠═9ba90dda-0d42-11eb-2786-894bf5d128e9
 # ╠═2d3a1750-0d64-11eb-2444-835bdf4982b2
+# ╠═85916c5c-0f88-11eb-0533-f77d51a11f81

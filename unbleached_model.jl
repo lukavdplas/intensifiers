@@ -35,21 +35,30 @@ md"""
 ## Quality of temperatures
 """
 
+# ╔═╡ 0f5aae90-0f94-11eb-378d-91bdb3b02e7f
+T_opt = 25
+
 # ╔═╡ 99d0bd14-0e23-11eb-0930-17f8f2dd2d33
-function quality(T; T_optimal = 25)
+function quality(T; T_optimal = T_opt)
 	scale = max(T_optimal - first(temperatures), last(temperatures) - T_optimal)
 	cos(π * (T - T_optimal) / scale)
 end
 
 # ╔═╡ efdd9118-0e24-11eb-05e9-b718b273943b
-function increasing_quality(T; T_optimal = 25)
+function increasing_quality(T; T_optimal = T_opt)
 	T <= T_optimal
 end
 
 # ╔═╡ 0e0653c8-0e25-11eb-3a7d-4300a6471c4a
-function decreasing_quality(T; T_optimal = 25)
+function decreasing_quality(T; T_optimal = T_opt)
 	T >= T_optimal
 end
+
+# ╔═╡ 0ad70f0e-0fbe-11eb-3f32-49145f4f2452
+T_opt_dist = Normal(23, 2.5)
+
+# ╔═╡ 4b91c07a-0fbe-11eb-1271-fb96f0d3a4fe
+optimum_prior(t) = pdf(T_opt_dist, t)
 
 # ╔═╡ a5311dbe-0e25-11eb-3e6f-a30be3644017
 md"""
@@ -63,7 +72,7 @@ function valence(message)
 end
 
 # ╔═╡ 83f443f0-0e29-11eb-0edb-b9851ffb95a1
-θ_q_range = 0:0.025:1
+θ_q_range = -1:0.1:1
 
 # ╔═╡ 863bc824-0e24-11eb-244c-c5c2ceacf103
 md"""
@@ -81,38 +90,76 @@ In the statement _Today is pleasantly warm_, the value of the threshold $\theta_
 
 _Pleasant_ is a vague expression in itself: a temperature $t$ is pleasant if
 
-$quality(t) > θ_Q$
+$quality(t) > \theta_Q$
 
 Here, $\theta_Q$ is also a threshold, but it is a degree of quality, not temperature. 
 
 I assume that _Today is pleasantly warm_ means something like _Today is so warm that it is pleasant_, or _Today is warm enough to be pleassant_. That is, today should at least be as warm as the coldest temperature that is still pleasant.
 
-$t > \min \{t | quality(t) > θ_Q \}$
+$t > \min \{t | quality(t) > \theta_Q \}$
 
-For reasons I will explain in my paper, I add a second condition to get a sort of local implication about pleasantness. A suitable threshold $\theta_T$ should not only be pleasant, but the derivative of the quality function should be increasing. Hence, we get
+For reasons I will explain in my paper, I add a second condition to get a sort of local implication about pleasantness. A suitable threshold $\theta_T$ should not only be pleasant, but the pleasantness must be increasing. That is, the derivative of the quality function must be positive.
 
-$t > \min \{t | quality(t) > θ_Q \wedge quality'(t) \geq 0 \}$
+$t > \min \{t | quality(t) > \theta_Q \wedge quality'(t) \geq 0 \}$
 
 For a negative expression like _horrible_, we get
 
-$t > \min \{t | quality(t) < θ_Q \wedge quality'(t) \leq 0 \}$
+$t > \min \{t | quality(t) < \theta_Q \wedge quality'(t) \leq 0 \}$
 """
 
-# ╔═╡ 2e55a99a-0e24-11eb-1d61-3f30f5c3daf7
-function literal_listener(T, message, θ_q)
-	if message == "null"
-		prior(T) / prior_range(first(temperatures), last(temperatures))
+# ╔═╡ e22b9c32-0fbd-11eb-228d-85a502f80b29
+function literal_listener(t, message, θ_q, T_optimal)
+	requirement = if valence(message) >= 0.5 
+		t -> quality(t, T_optimal = T_optimal) >= θ_q && increasing_quality(t, T_optimal = T_optimal)
 	else
-		val = valence(message)
-		requirement = if val >= 0.5 
-			T -> quality(T) >= θ_q && increasing_quality(T)
+		t -> quality(t, T_optimal = T_optimal) <= θ_q && decreasing_quality(t, T_optimal = T_optimal)
+	end
+	
+	if count(requirement, temperatures) == 0
+		0
+	else
+		#else, return 
+		θ_T = first(filter(requirement, temperatures))
+
+		if t >= θ_T
+			prior(t) / prior_range(θ_T, last(temperatures))
 		else
-			T -> quality(T) <= θ_q && decreasing_quality(T)
+			0
 		end
+	end
+end
+
+# ╔═╡ 7726ec9c-0fbe-11eb-140f-b3a43dbd0749
+function literal_listener(t, message, θ_q)
+	if message == "null"
+		prior(t) / prior_range(first(temperatures), last(temperatures))
+	else
+		values = map(15:35) do T_optimal
+			literal_listener(t, message, θ_q, T_optimal) * optimum_prior(T_optimal)
+		end
+		sum(values)
+	end
+end
+
+# ╔═╡ 2e55a99a-0e24-11eb-1d61-3f30f5c3daf7
+function literal_listenerX(t, message, θ_q)
+	if message == "null"
+		prior(t) / prior_range(first(temperatures), last(temperatures))
+	else
+		requirement = if valence(message) >= 0.5 
+			t -> quality(t) >= θ_q && increasing_quality(t)
+		else
+			t -> quality(t) <= θ_q && decreasing_quality(t)
+		end
+		
+		if count(requirement, temperatures) == 0
+			return 0
+		end
+			
 		θ_T = first(filter(requirement, temperatures))
 		
-		if T >= θ_T
-			prior(T) / prior_range(θ_T, last(temperatures))
+		if t >= θ_T
+			prior(t) / prior_range(θ_T, last(temperatures))
 		else
 			0
 		end
@@ -137,7 +184,7 @@ function speaker(T, message, θ_qs, λ)
 end
 
 # ╔═╡ 3fc4f2d0-0e29-11eb-1e99-6b85c118cb3c
-function listener(degree, message, λ)
+function listener(degree::Int, message, λ)
 	not_normalised(T) = let
 		speaker_given_θ(θ) = let
 			θ_qs = Dict(m => θ for m in messages)
@@ -148,6 +195,26 @@ function listener(degree, message, λ)
 	end
 	
 	not_normalised(degree) / sum(not_normalised.(temperatures))
+end
+
+# ╔═╡ f78e5b2e-0fc1-11eb-0f8e-bbaef07de1cf
+function normalise(values)
+	values ./ sum(values)
+end
+
+# ╔═╡ 4f9615c0-0fc0-11eb-266a-8fc45ddddd5d
+function listener(degrees::AbstractArray, message, λ)
+	not_normalised(T) = let
+		speaker_given_θ(θ) = let
+			θ_qs = Dict(m => θ for m in messages)
+			speaker(T, message, θ_qs, λ)
+		end
+	
+		prior(T) * sum(map(speaker_given_θ, θ_q_range))
+	end
+	
+	values = not_normalised.(degrees)
+	normalise(values)
 end
 
 # ╔═╡ 92447a22-0e28-11eb-177f-259c76ee3ed0
@@ -202,7 +269,7 @@ let
 	p = plot(title = "listener", xlabel = "temperature")
 	
 	for message in messages
-		plot!(p, temperatures, listener.(temperatures, message, λ), 
+		plot!(p, temperatures, listener(temperatures, message, λ), 
 			label = message)
 	end
 	p
@@ -219,18 +286,25 @@ md"Package imports:"
 # ╠═6a9854dc-0e24-11eb-13ed-cdfc6eb9cd76
 # ╠═70679872-0e24-11eb-157c-9fafc1e38c93
 # ╟─471832c2-0e24-11eb-0476-c1276d2e16b7
+# ╠═0f5aae90-0f94-11eb-378d-91bdb3b02e7f
 # ╠═99d0bd14-0e23-11eb-0930-17f8f2dd2d33
 # ╠═efdd9118-0e24-11eb-05e9-b718b273943b
 # ╠═0e0653c8-0e25-11eb-3a7d-4300a6471c4a
+# ╠═0ad70f0e-0fbe-11eb-3f32-49145f4f2452
+# ╠═4b91c07a-0fbe-11eb-1271-fb96f0d3a4fe
 # ╟─a5311dbe-0e25-11eb-3e6f-a30be3644017
 # ╠═fdd381be-0e25-11eb-0690-dde696775902
 # ╠═83f443f0-0e29-11eb-0edb-b9851ffb95a1
 # ╟─863bc824-0e24-11eb-244c-c5c2ceacf103
+# ╠═e22b9c32-0fbd-11eb-228d-85a502f80b29
+# ╠═7726ec9c-0fbe-11eb-140f-b3a43dbd0749
 # ╠═2e55a99a-0e24-11eb-1d61-3f30f5c3daf7
 # ╠═7224d3e0-0e28-11eb-3d76-019ac2bfd3e6
 # ╠═679715aa-0e28-11eb-340f-0d094f51202d
 # ╠═28d7735a-0e28-11eb-29f3-51bd858e119c
 # ╠═3fc4f2d0-0e29-11eb-1e99-6b85c118cb3c
+# ╠═4f9615c0-0fc0-11eb-266a-8fc45ddddd5d
+# ╠═f78e5b2e-0fc1-11eb-0f8e-bbaef07de1cf
 # ╟─92447a22-0e28-11eb-177f-259c76ee3ed0
 # ╠═99dd8134-0e28-11eb-269f-39f66a3e4fd2
 # ╠═09e68476-0e29-11eb-3a17-7fb15acd5557

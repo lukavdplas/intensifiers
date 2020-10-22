@@ -59,6 +59,9 @@ function responses(intensifier; convert = true)
 	end
 end
 
+# ╔═╡ 914f0af2-0fb2-11eb-360d-35a67ebeb105
+histogram(responses("bare"))
+
 # ╔═╡ 56fc5c34-0d86-11eb-3efd-e71edd8e7578
 valence_path = data_path * "valenceforexp.csv"
 
@@ -95,6 +98,7 @@ scatter(plot_data.valence, plot_data.temperature,
 # ╠═b27eefb2-0d82-11eb-3a4c-8b80a3f37382
 # ╠═845a6716-0d89-11eb-1e2b-cfe0cbba2c1f
 # ╠═6f8673da-0d83-11eb-29e4-bbe1bb7e50c8
+# ╠═914f0af2-0fb2-11eb-360d-35a67ebeb105
 # ╟─f40661ae-0e34-11eb-35cf-15edd1baeaa4
 # ╠═7440f930-0d86-11eb-3a77-01c95e1bcb31
 # ╠═a57c7f56-0d86-11eb-1b09-bd0bac9b3e29
