@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
@@ -10,21 +10,15 @@ using CSV, DataFrames, Statistics
 # ╔═╡ d12aea32-0d83-11eb-238d-89bef7c0bedc
 using Plots
 
+# ╔═╡ 89ac52a2-1460-11eb-2f22-4f8c5a85cfc3
+include("valence.jl")
+
 # ╔═╡ ed0939e8-0e34-11eb-22d6-092f7b09060f
 md"## Experiment results"
 
 # ╔═╡ b27eefb2-0d82-11eb-3a4c-8b80a3f37382
 function celcius(T)
 	(T - 32) * 5/9
-end
-
-# ╔═╡ 845a6716-0d89-11eb-1e2b-cfe0cbba2c1f
-function exclude_outliers(points)
-	μ = mean(points)
-	σ = std(points)
-	filter(points) do point
-		abs((point - μ) / σ) <= 2
-	end
 end
 
 # ╔═╡ f40661ae-0e34-11eb-35cf-15edd1baeaa4
@@ -51,7 +45,6 @@ intensifiers = unique(exp_data.adverb)
 # ╔═╡ 6f8673da-0d83-11eb-29e4-bbe1bb7e50c8
 function responses(intensifier; convert = true)
 	results = exp_data[exp_data.adverb .== intensifier, :response]
-	#results = exclude_outliers(results)
 	if convert
 		celcius.(results)
 	else
@@ -61,22 +54,6 @@ end
 
 # ╔═╡ 914f0af2-0fb2-11eb-360d-35a67ebeb105
 histogram(responses("bare"))
-
-# ╔═╡ 56fc5c34-0d86-11eb-3efd-e71edd8e7578
-valence_path = data_path * "valenceforexp.csv"
-
-# ╔═╡ 7440f930-0d86-11eb-3a77-01c95e1bcb31
-valence_data = CSV.read(valence_path, DataFrame)
-
-# ╔═╡ a57c7f56-0d86-11eb-1b09-bd0bac9b3e29
-function valence(intensifier)
-	if intensifier == "bare"
-		return 0.5
-	else
-		intensifier_data = valence_data[valence_data.adverb .== intensifier, :]
-		return first(intensifier_data.Valence)
-	end
-end
 
 # ╔═╡ 7e199af8-0d88-11eb-2385-67be3597036c
 plot_data = DataFrame(
@@ -91,17 +68,18 @@ scatter(plot_data.valence, plot_data.temperature,
 	#series_annotations = Plots.text.(plot_data.intensifier, :bottom, 8),
 	label = nothing, xlabel = "valence", ylabel = "mean response (°C)")
 
+# ╔═╡ 56fc5c34-0d86-11eb-3efd-e71edd8e7578
+valence_path = data_path * "valenceforexp.csv"
+
 # ╔═╡ Cell order:
 # ╟─ed0939e8-0e34-11eb-22d6-092f7b09060f
 # ╠═981153ea-0d82-11eb-0261-8f7023dca851
 # ╠═4905ceba-0d83-11eb-2984-b7e022ec1f65
 # ╠═b27eefb2-0d82-11eb-3a4c-8b80a3f37382
-# ╠═845a6716-0d89-11eb-1e2b-cfe0cbba2c1f
 # ╠═6f8673da-0d83-11eb-29e4-bbe1bb7e50c8
 # ╠═914f0af2-0fb2-11eb-360d-35a67ebeb105
 # ╟─f40661ae-0e34-11eb-35cf-15edd1baeaa4
-# ╠═7440f930-0d86-11eb-3a77-01c95e1bcb31
-# ╠═a57c7f56-0d86-11eb-1b09-bd0bac9b3e29
+# ╠═89ac52a2-1460-11eb-2f22-4f8c5a85cfc3
 # ╟─01642522-0e35-11eb-0bdf-c587e25b21fa
 # ╠═7e199af8-0d88-11eb-2385-67be3597036c
 # ╠═c9538c10-0d88-11eb-23e2-c38d6ceb4ddd

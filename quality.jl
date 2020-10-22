@@ -1,20 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
-        el
-    end
-end
-
-# ╔═╡ 4699f9c6-0e17-11eb-20a8-991c7639a5ac
-using Plots
+# ╔═╡ 5e68b950-1456-11eb-19b6-f3a1451888cf
+using Distributions
 
 # ╔═╡ 285a22da-0e17-11eb-0683-7fb7298050ac
 md"""
@@ -39,78 +30,57 @@ Furthermore, the value of $\frac{\delta \, quality(t)}{\delta \, t}$ must be def
 md"""
 ## Implementation
 
-I am roughly basing my function [this paper](https://arxiv.org/ftp/arxiv/papers/1709/1709.00071.pdf). I decided to use a cosine function to get the curvature I wanted, where the function is scaled to include at most half a phase within the domain.
+I am roughly basing my function [this paper](https://arxiv.org/ftp/arxiv/papers/1709/1709.00071.pdf). I decided to use a cosine function to get the curvature I wanted. I scale the function horizontally so that the edges of the domain are both global minimal for the quality.
 
-The function uses an optimum temperature as a parameter, which I estimate as 25°C
 """
-
-# ╔═╡ 96b69140-0e1f-11eb-2c67-756ef58f1d96
-md"""
-## Plot
-"""
-
-# ╔═╡ 0add64ce-0e1c-11eb-15d7-d9a72989eadb
-temperatures = -10:50
 
 # ╔═╡ 1602b64c-0e1c-11eb-1a4f-95d1cbd61452
-function quality(T; T_optimal = 25)
-	scale = max(T_optimal - first(temperatures), last(temperatures) - T_optimal)
-	cos(π * (T - T_optimal) / scale)
+function quality(t; t_optimal = 25)
+	scale = if t < t_optimal
+		t_optimal - first(temperatures)
+		
+	else
+		last(temperatures) - t_optimal
+	end
+	cos(π * (t - t_optimal) / scale)
 end
 
-# ╔═╡ cbe31486-0e1f-11eb-02e0-6b08ca181182
-@bind T_optimal html"<input type=range min=-10 max=50 value=25>"
-
-# ╔═╡ e8eb42d8-0e1f-11eb-0f39-f7f983e01fae
-md"Optimal temperature: $(T_optimal) °C"
-
-# ╔═╡ 20d8dc7c-0e1c-11eb-178f-8b70e057c1fd
-plot(temperatures, quality.(temperatures, T_optimal = T_optimal), 
-	label=nothing, xlabel = "temperature", ylabel = "quality")
-
-# ╔═╡ 7531071c-0fa8-11eb-153a-c1e368d9db42
+# ╔═╡ ef4f1de6-1457-11eb-3891-e5115211eb67
 md"""
-## One-sided quality functions
+As mentioned, we will use some information about the derivative. Note that $quality$ is defined piecewise, but is smooth and continuous, so the gradient is still defined for every point in the domain.
+
+We will only use information on whether the $quality$ is increasing or decreasing on a point $t$, so it is faster to not use the actual gradient. Given the restrictions we put on $quality$, we can simply say:
 """
 
-# ╔═╡ acd0c320-0fa7-11eb-151a-5198f3a567ab
-function warmth_quality(T; T_optimal = 25)
-	if T < T_optimal
-		1
-	else
-		quality(T)
-	end
+# ╔═╡ 69f194e8-1458-11eb-1286-bf3642a440bd
+function increasing_quality(t; t_optimal = 25)
+	t <= t_optimal
 end
 
-# ╔═╡ e7b85c78-0fa7-11eb-09e8-11ab24ce5f3a
-function cold_quality(T; T_optimal = 25)
-	if T > T_optimal
-		1
-	else
-		quality(T)
-	end
+# ╔═╡ 6f919998-1458-11eb-0682-717915707ab1
+function decreasing_quality(t; t_optimal = 25)
+	t >= t_optimal
 end
 
-# ╔═╡ d25f02a0-0fa7-11eb-389a-ed231cc697e3
-let
-	p = plot(xlabel = "temperature", ylabel = "quality")
-	plot!(temperatures, warmth_quality.(temperatures, T_optimal = T_optimal),
-		label="warmth", linecolor = :red)
-	plot!(temperatures, cold_quality.(temperatures, T_optimal = T_optimal),
-		label="cold", linecolor = :deepskyblue)
-end
+# ╔═╡ e2e797ba-1455-11eb-13c8-e17a7439a353
+md"""
+There is some variation in what is considered an optimal temperature. I assume that the optimal temperature is normally distributed.
+"""
+
+# ╔═╡ 8ab84bce-1456-11eb-0a8d-4f141574195d
+t_opt_dist = Normal(25, 2.5)
+
+# ╔═╡ d812ebe4-1457-11eb-2874-1d9e4bed8c6d
+optimum_prior(t) = pdf(t_opt_dist, t)
 
 # ╔═╡ Cell order:
 # ╟─285a22da-0e17-11eb-0683-7fb7298050ac
 # ╟─e21058fa-0e1e-11eb-229d-03148e523f6d
 # ╠═1602b64c-0e1c-11eb-1a4f-95d1cbd61452
-# ╟─96b69140-0e1f-11eb-2c67-756ef58f1d96
-# ╠═4699f9c6-0e17-11eb-20a8-991c7639a5ac
-# ╠═0add64ce-0e1c-11eb-15d7-d9a72989eadb
-# ╠═cbe31486-0e1f-11eb-02e0-6b08ca181182
-# ╟─e8eb42d8-0e1f-11eb-0f39-f7f983e01fae
-# ╠═20d8dc7c-0e1c-11eb-178f-8b70e057c1fd
-# ╟─7531071c-0fa8-11eb-153a-c1e368d9db42
-# ╠═acd0c320-0fa7-11eb-151a-5198f3a567ab
-# ╠═e7b85c78-0fa7-11eb-09e8-11ab24ce5f3a
-# ╠═d25f02a0-0fa7-11eb-389a-ed231cc697e3
+# ╟─ef4f1de6-1457-11eb-3891-e5115211eb67
+# ╠═69f194e8-1458-11eb-1286-bf3642a440bd
+# ╠═6f919998-1458-11eb-0682-717915707ab1
+# ╟─e2e797ba-1455-11eb-13c8-e17a7439a353
+# ╠═5e68b950-1456-11eb-19b6-f3a1451888cf
+# ╠═8ab84bce-1456-11eb-0a8d-4f141574195d
+# ╠═d812ebe4-1457-11eb-2874-1d9e4bed8c6d

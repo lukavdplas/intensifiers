@@ -1,32 +1,30 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 88dcaae6-0d3c-11eb-2ffc-9d5335de20d2
-using CSV
-
-# ╔═╡ 91983c04-0d3c-11eb-3329-23d2ccb973cc
-using DataFrames
-
-# ╔═╡ 073b591e-0d3d-11eb-3eb7-ff80c3c4309f
-using Dates
+using DataFrames, CSV, Dates, Distributions
 
 # ╔═╡ 71bbd610-0d3d-11eb-13e8-cde4663c8962
 using Plots
 
-# ╔═╡ 0e6c7f66-0d41-11eb-1d3c-c7ff357e99f1
-using Distributions
-
-# ╔═╡ 32e4ff1c-0d3c-11eb-12da-b5eb888ce221
-data_path = "./data/"
+# ╔═╡ ca5034fc-1464-11eb-32f0-4f4d4ad10ea2
+md"""
+We import the data on weather in New York.
+"""
 
 # ╔═╡ 472a916c-0d3c-11eb-0a2b-230360f03207
-weather_file = data_path * "nyc.csv"
+weather_file = "./data/nyc.csv"
 
 # ╔═╡ 8af16164-0d3c-11eb-3fdf-53d1f42a2e6f
 weather_data = CSV.read(weather_file, DataFrame)
+
+# ╔═╡ e0e3fb84-1464-11eb-234a-d9d01ded6183
+md"""
+Because the experiment stated that it was spring, we take the subset of data from March to June.
+"""
 
 # ╔═╡ cf6e414a-0d3c-11eb-18de-295b3dc92586
 spring_data = let
@@ -34,47 +32,57 @@ spring_data = let
 	weather_data[spring.(weather_data.Date),:]
 end
 
-# ╔═╡ c9d6e56e-0d3e-11eb-06af-1538ffdf2c24
-function celcius(T)
-	(T - 32) * 5/9
+# ╔═╡ f95b9758-1464-11eb-0ad2-719d7df1a927
+md"""
+For my own convenience, I will convert all values to Celcius.
+"""
+
+# ╔═╡ 24f6c7f4-1463-11eb-3088-91b82422d915
+function celcius(t)
+	(t - 32) * 5/9
 end
 
-# ╔═╡ 271439c4-0d40-11eb-0a04-e319bdf313de
-function convert(T_data)
-	no_missing = filter(T -> typeof(T) != Missing, T_data)
-	converted = celcius.(no_missing)
-end
+# ╔═╡ 0d0f1a18-1465-11eb-0866-cfdb293c1fb5
+md"""
+I assume that people's estimation of the temperature on a given day corresponds to the maximum temperature. So the prior distribution of temperature will be based on the maximum temperatures in spring.
+"""
 
 # ╔═╡ f4c8ccf4-0d40-11eb-1a83-8d92313bf533
-max_temperatures = convert(spring_data[!, "Max.TemperatureF"])
+max_temperatures = celcius.(spring_data[!, "Max.TemperatureF"])
 
-# ╔═╡ 05198e34-0d3e-11eb-2631-3929e01112f8
-histogram(max_temperatures, normalize=true,
-	xlabel = "T", ylabel = "frequency", legend = nothing)
+# ╔═╡ 35313774-1465-11eb-0b5f-5528039464c1
+md"""
+This is fitted to a normal distribution.
+"""
 
 # ╔═╡ cfbff25c-0d40-11eb-1df1-b7634be673fb
-temp_distribution = fit(Normal, max_temperatures)
+prior_temp = fit(Normal, max_temperatures)
 
-# ╔═╡ 32781b9a-0d41-11eb-2b14-a14cffbab6c5
-let
-	temps = -10:45
-	plot(temps, pdf.(temp_distribution, temps), 
-		xlabel = "T", ylabel = "P", legend = nothing)
-end
+# ╔═╡ 498edc6c-1465-11eb-229c-bb6f702e8cf6
+md"""
+For convenience, I define two shorthand functions to get the prior probability of a temperature, or an interval of temperatures.
+"""
+
+# ╔═╡ b5a5b8f4-1464-11eb-1752-9fda6cdad83d
+prior(degree) = pdf(prior_temp, degree)
+
+# ╔═╡ bf5f8f32-1464-11eb-204c-53a61437ddd0
+prior_range(lower, upper) = cdf(prior_temp, upper + 1) - cdf(prior_temp, lower)
 
 # ╔═╡ Cell order:
 # ╠═88dcaae6-0d3c-11eb-2ffc-9d5335de20d2
-# ╠═91983c04-0d3c-11eb-3329-23d2ccb973cc
-# ╠═073b591e-0d3d-11eb-3eb7-ff80c3c4309f
 # ╠═71bbd610-0d3d-11eb-13e8-cde4663c8962
-# ╠═0e6c7f66-0d41-11eb-1d3c-c7ff357e99f1
-# ╠═32e4ff1c-0d3c-11eb-12da-b5eb888ce221
+# ╟─ca5034fc-1464-11eb-32f0-4f4d4ad10ea2
 # ╠═472a916c-0d3c-11eb-0a2b-230360f03207
 # ╠═8af16164-0d3c-11eb-3fdf-53d1f42a2e6f
+# ╟─e0e3fb84-1464-11eb-234a-d9d01ded6183
 # ╠═cf6e414a-0d3c-11eb-18de-295b3dc92586
-# ╠═c9d6e56e-0d3e-11eb-06af-1538ffdf2c24
-# ╠═271439c4-0d40-11eb-0a04-e319bdf313de
+# ╟─f95b9758-1464-11eb-0ad2-719d7df1a927
+# ╠═24f6c7f4-1463-11eb-3088-91b82422d915
+# ╟─0d0f1a18-1465-11eb-0866-cfdb293c1fb5
 # ╠═f4c8ccf4-0d40-11eb-1a83-8d92313bf533
-# ╠═05198e34-0d3e-11eb-2631-3929e01112f8
+# ╟─35313774-1465-11eb-0b5f-5528039464c1
 # ╠═cfbff25c-0d40-11eb-1df1-b7634be673fb
-# ╠═32781b9a-0d41-11eb-2b14-a14cffbab6c5
+# ╟─498edc6c-1465-11eb-229c-bb6f702e8cf6
+# ╠═b5a5b8f4-1464-11eb-1752-9fda6cdad83d
+# ╠═bf5f8f32-1464-11eb-204c-53a61437ddd0
