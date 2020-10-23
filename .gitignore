@@ -23,5 +23,6 @@ docs/site/
 # environment.
 Manifest.toml
 
-#data files
+#data files and figures
 /data
+/figures
