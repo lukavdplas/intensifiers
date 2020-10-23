@@ -7,6 +7,13 @@ using InteractiveUtils
 # ╔═╡ 88dcaae6-0d3c-11eb-2ffc-9d5335de20d2
 using DataFrames, CSV, Dates, Distributions
 
+# ╔═╡ 0c36a7ce-155b-11eb-2271-2d9133a99e8e
+md"""
+# Weather data
+
+This notebook fits a distribution for temperatures.
+"""
+
 # ╔═╡ ca5034fc-1464-11eb-32f0-4f4d4ad10ea2
 md"""
 We import the data on weather in New York.
@@ -41,7 +48,7 @@ end
 
 # ╔═╡ 0d0f1a18-1465-11eb-0866-cfdb293c1fb5
 md"""
-I assume that people's estimation of the temperature on a given day corresponds to the maximum temperature. So the prior distribution of temperature will be based on the maximum temperatures in spring.
+We assume that people's estimation of the temperature on a given day corresponds to the maximum temperature. So the prior distribution of temperature will be based on the maximum temperatures in spring.
 """
 
 # ╔═╡ f4c8ccf4-0d40-11eb-1a83-8d92313bf533
@@ -57,7 +64,7 @@ prior_temp = fit(Normal, max_temperatures)
 
 # ╔═╡ 498edc6c-1465-11eb-229c-bb6f702e8cf6
 md"""
-For convenience, I define two shorthand functions to get the prior probability of a temperature, or an interval of temperatures.
+For convenience, we define two shorthand functions to get the prior probability of a temperature, or an interval of temperatures.
 """
 
 # ╔═╡ b5a5b8f4-1464-11eb-1752-9fda6cdad83d
@@ -67,6 +74,7 @@ prior(degree) = pdf(prior_temp, degree)
 prior_range(lower, upper) = cdf(prior_temp, upper + 1) - cdf(prior_temp, lower)
 
 # ╔═╡ Cell order:
+# ╟─0c36a7ce-155b-11eb-2271-2d9133a99e8e
 # ╠═88dcaae6-0d3c-11eb-2ffc-9d5335de20d2
 # ╟─ca5034fc-1464-11eb-32f0-4f4d4ad10ea2
 # ╠═472a916c-0d3c-11eb-0a2b-230360f03207

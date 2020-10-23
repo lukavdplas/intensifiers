@@ -26,6 +26,13 @@ begin
 	include("valence.jl")
 end
 
+# ╔═╡ 03e99cee-1544-11eb-09d9-374f09f4b77f
+md"""
+# Unbleached model
+
+The unbleached model uses knowledge about the quality of temperatures to infer the meaning of phrases like _pleasantly warm_ or _horribly warm_.
+"""
+
 # ╔═╡ d2e0127a-0e24-11eb-3689-b1054d292337
 temperatures = -10:50
 
@@ -114,6 +121,11 @@ md"""
 ### The speaker
 """
 
+# ╔═╡ 6ed04904-1544-11eb-2791-1d35b61eadb6
+md"The utility function includes the cost in its definition, for the sake of consistency. 
+
+However, the cost is set to 0."
+
 # ╔═╡ 28d7735a-0e28-11eb-29f3-51bd858e119c
 function cost(message)
 	0.0
@@ -169,7 +181,7 @@ md"""
 @bind run_test html"<input type=checkbox> Run test"
 
 # ╔═╡ 09e68476-0e29-11eb-3a17-7fb15acd5557
-λ = 1
+λ = 2
 
 # ╔═╡ da20627e-0e24-11eb-1017-ff861a913adb
 messages = ["pleasantly", "horribly"]
@@ -185,13 +197,15 @@ end
 
 # ╔═╡ 50f6eeac-0e29-11eb-2827-b1929fd21330
 let
-	p = plot(title = "listener", xlabel = "temperature")
+	p = plot(title = "listener", xlabel = "temperature", palette = :seaborn_muted6)
+	
+	plot!(p, temperatures, prior.(temperatures), label = "prior", lw = 3)
 	
 	for i in 1:length(messages)
 		message = messages[i]
 		result = results[i]
 		plot!(p, temperatures, result, 
-			label = message)
+			label = message, lw = 3)
 	end
 	p
 end
@@ -200,6 +214,7 @@ end
 md"Package imports:"
 
 # ╔═╡ Cell order:
+# ╟─03e99cee-1544-11eb-09d9-374f09f4b77f
 # ╠═d2e0127a-0e24-11eb-3689-b1054d292337
 # ╟─471832c2-0e24-11eb-0476-c1276d2e16b7
 # ╠═c95afa64-1458-11eb-38ac-03ed16acb35d
@@ -209,6 +224,7 @@ md"Package imports:"
 # ╠═e22b9c32-0fbd-11eb-228d-85a502f80b29
 # ╟─3cf38e04-145f-11eb-0426-31d2a4ebdfe8
 # ╠═7224d3e0-0e28-11eb-3d76-019ac2bfd3e6
+# ╟─6ed04904-1544-11eb-2791-1d35b61eadb6
 # ╠═679715aa-0e28-11eb-340f-0d094f51202d
 # ╠═28d7735a-0e28-11eb-29f3-51bd858e119c
 # ╟─486632e6-145f-11eb-145d-5f4b6167d7d9
