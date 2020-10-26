@@ -170,10 +170,10 @@ The model requires the parameters λ and γ.
 """
 
 # ╔═╡ 0cf929e6-1538-11eb-30ab-a7cc27f8260c
-λ = 3.991
+λ = 3.24
 
 # ╔═╡ d3af2f3c-1537-11eb-0769-01617b548a8c
-γ = 1.308
+γ = 0.467
 
 # ╔═╡ 164ef02a-1538-11eb-1111-5b996712e670
 predictor = model(λ, γ)

@@ -75,7 +75,7 @@ The initial values are based on some manual exploration of the results. These se
 initial_λ = 3.0
 
 # ╔═╡ 9bc90c9a-1470-11eb-3ba2-2d792a0d3584
-initial_γ = 1.5
+initial_γ = 0.5
 
 # ╔═╡ 2f4b16ba-1512-11eb-1564-0340593d41d3
 result = optimize(model_evaluation, [initial_λ, initial_γ], time_limit = 300)
@@ -120,7 +120,7 @@ let
 end
 
 # ╔═╡ 9fa4b050-1527-11eb-041c-5d3e5d42d6f3
-γ_values = 0.0 : 5.0
+γ_values = 0.0 : 0.2 : 1.0
 
 # ╔═╡ a4f9043e-1527-11eb-2de3-11c9622135a5
 γ_results = map(γ_values) do γ

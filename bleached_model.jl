@@ -28,7 +28,7 @@ We import code on the prior distribution of temperatures and the valence of mess
 md"""
 ## Possible worlds and messages
 
-We start by defining the range of possible (classes of) worlds. These are degrees of temperatures, raning from -10 to 50 °C.
+We start by defining the range of possible (classes of) worlds. This is the set $\textbf{T}$, which contains degrees of temperatures, raning from -10 to 50 °C.
 """
 
 # ╔═╡ 5d8e8c22-0d5c-11eb-1398-db1ee99ce9d1
@@ -51,11 +51,13 @@ The model consists of a literal listener, a speaker and a pragmatic listener.
 
 ### Literal listener
 
-The literal listener takes a temperature $t$, a message $m$ and a threshold $\theta$. The message is mostly included for consistency, but the listener does not actually use it.
+The literal listener model defines a posterior probability distribution over $T$, the temperature.
+
+The literal listener function takes a temperature $t$, a message $m$ and a threshold $\theta$. The message is mostly included for consistency, but the listener does not actually use it.
 
 They exclude the temperatures lower than the threshold, and weigh each remainig temperature by its prior probability.
 
-$L_0(t \mid m, \theta) = \frac{(t \geq \theta) \cdot P(t) }{\sum_{t' \in T} (t' \geq \theta) \cdot P(t')}$
+$L_0(t \mid m, \theta) = \frac{(t \geq \theta) \cdot P(t) }{\sum_{t' \in \textbf{T}} (t' \geq \theta) \cdot P(t')}$
 
 For the sake of efficiency, the function rewrites this as
 
@@ -81,15 +83,17 @@ md"""
 
 The speaker model gives the probability that a speaker will use message $m$. This is dependent on the temperature $t$, as well as several parameters:
 
-*  The fuction $\Theta$, a set of ordered pairs $(m, \theta)$ where $m$ is a message and $\theta$ its threshold. The domain of $\Theta$ contains all the messages.
+*  The fuction $\Theta$, a set of ordered pairs $\langle m, \theta \rangle$ where $m$ is a message and $\theta$ its threshold. The domain of $\Theta$ contains all the messages.
 *  $\lambda$, which indicates how optimal the speaker behaves
 *  $\gamma$, which is implemented in the cost
+
+The speaker uses a utility function to weigh each message.
 
 $S_1(m \mid t, \Theta, \lambda, \gamma) \sim \exp \big( \lambda \cdot U(t, m, \Theta(m), \gamma) \big)$
 
 Or more precisely
 
-$S_1(m \mid t, \Theta, \lambda, \gamma) = \frac{\exp \big( \lambda \cdot U(t, m, \Theta(m), \gamma) \big)}{\sum_{(m', \theta') \in \Theta} \exp \big( \lambda \cdot U(t, m', \theta', \gamma) \big)}$
+$S_1(m \mid t, \Theta, \lambda, \gamma) = \frac{\exp \big( \lambda \cdot U(t, m, \Theta(m), \gamma) \big)}{\sum_{\langle m', \theta' \rangle \in \Theta} \exp \big( \lambda \cdot U(t, m', \theta', \gamma) \big)}$
 """
 
 # ╔═╡ ceb05cd2-155e-11eb-27a1-89f28be152cb
@@ -103,13 +107,13 @@ $U(t, m, \theta, \gamma) = \ln L_0(t,m,\theta) - C(m, \gamma)$
 md"""
 The cost uses the valence of the message. In particular, we get:
 
-$C(m, \gamma) = \cases{0 & if \textit{m} = nothing \\ \gamma \cdot (1 - V(m)) & otherwise }$
+$C(m, \gamma) = \cases{0 & if \textit{m} = nothing \\ \gamma + (1 - V(m)) & otherwise }$
 """
 
 # ╔═╡ d6582570-0d5d-11eb-28f0-ffb9703ffdc6
 function cost(message, γ)
 	if message != "null" 
-		γ * (1 - valence(message))
+		γ + (1 - valence(message))
 	else
 		0
 	end
@@ -136,17 +140,17 @@ The pragmatic listener sums out over all values of possible thresholds.
 
 For a given message $m$ and a threshold $\theta$, the pragmatic listener defines
 
-$\Theta_{m,\theta} = \{(m, \theta), (\text{"null"}, \min(T)) \}$
+$\Theta_{m,\theta} = \{\langle m, \theta \rangle, \langle \text{"null"}, \min(\textbf{T}) \rangle \}$
 
 So the threshold $\theta$ is used for the message $m$. We add the "null" message with the lowest possible threshold (so it's always true).
 
 With this definition of $\Theta$, the listener can calculate the probability of a degree $t$ as
 
-$P(t|m, \Theta, \lambda, \gamma) = S_1(m \mid t, \Theta, \lambda, \gamma) \cdot P(t)$
+$P(t|m, \Theta, \lambda, \gamma) = S_1(m \mid t, \Theta_{m,\theta}, \lambda, \gamma) \cdot P(t)$
 
 Summing out over all the thresholds, we get
 
-$L_1(t|m, \lambda, \gamma) \sim \sum_{\theta \in T} S_1(m \mid t, \Theta_{m,\theta}, \lambda, \gamma) \cdot P(t)$
+$L_1(t|m, \lambda, \gamma) \sim \sum_{\theta \in \textbf{T}} S_1(m \mid t, \Theta_{m,\theta}, \lambda, \gamma) \cdot P(t)$
 
 This value is normalised over all temperatures $t \in T$.
 """
